@@ -1,3 +1,18 @@
+import 'dotenv/config';
+import makeWASocket from '@whiskeysockets/baileys';
+import { MongoClient } from 'mongodb';
+import fs from 'fs-extra';
+import pino from 'pino';
+
+const logger = pino();
+const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+const dbName = 'whatsapp_logs';
+
+const client = new MongoClient(dbUri);
+await client.connect();
+const db = client.db(dbName);
+const messagesCollection = db.collection('messages');
+// أكمل كود البوت الخاص بك هنا
 import { connectDB, Message } from './db.js'
 import {
   makeWASocket,

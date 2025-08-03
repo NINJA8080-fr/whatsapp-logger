@@ -1,21 +1,28 @@
+import 'dotenv/config';
+import express from 'express';
+import fs from 'fs-extra';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-dotenv.config();
 
-mongoose.connect(process.env.MONGO_URI, {
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
-})
-.then(() => console.log("✅ متصل بقاعدة البيانات MongoDB بنجاح"))
-.catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
-import express from 'express'
-const app = express()
-const port = process.env.PORT || 3000
+});
 
-app.get('/', (req, res) => {
-  res.send('✅ البوت شغال من سيرفر Railway!')
-})
+const MessageSchema = new mongoose.Schema({
+  from: String,
+  message: String,
+  timestamp: Date
+});
+const Message = mongoose.model('Message', MessageSchema);
 
-app.listen(port, () => {
-  console.log(`🚀 السيرفر يعمل على http://localhost:${port}`)
-})
+app.get('/', async (req, res) => {
+  const logs = await Message.find().sort({ timestamp: -1 }).limit(100);
+  res.json(logs);
+});
+
+app.listen(PORT, () => {
+  console.log(`📡 Server listening on http://localhost:${PORT}`);
+});
