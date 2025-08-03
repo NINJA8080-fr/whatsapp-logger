@@ -6,29 +6,31 @@ import {
 } from '@whiskeysockets/baileys'
 import P from 'pino'
 import fs from 'fs'
-import qrcode from 'qrcode-terminal' // ✅ استدعاء مكتبة QR
+import qrcode from 'qrcode-terminal'
 
 const logFile = './messages.json'
 let messages = []
 
+// ✅ تحميل سجل الرسائل من الملف
 if (fs.existsSync(logFile)) {
   try {
     messages = JSON.parse(fs.readFileSync(logFile))
-  } catch (err) {
+  } catch {
     messages = []
   }
 }
 
 async function startBot() {
-  const { state, saveCreds } = await useMultiFileAuthState('auth')
+  const { state, saveCreds } = await useMultiFileAuthState('./auth')
   const { version } = await fetchLatestBaileysVersion()
 
   const sock = makeWASocket({
     version,
     auth: state,
-    logger: P({ level: 'silent' }),
+    logger: P({ level: 'silent' })
   })
 
+  // ✅ تسجيل الرسائل المستلمة
   sock.ev.on('messages.upsert', async ({ messages: upsertedMsgs }) => {
     const msg = upsertedMsgs[0]
     if (!msg.message) return
@@ -44,24 +46,26 @@ async function startBot() {
     console.log(`[${time}] ${sender}: ${text}`)
   })
 
-  sock.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect, qr } = update
-
-    // ✅ عرض QR في الطرفية بشكل مرئي
+  // ✅ التعامل مع الاتصال و QR
+  sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
     if (qr) {
+      console.log('✅ امسح الكود لتسجيل الدخول إلى واتساب:')
       qrcode.generate(qr, { small: true })
     }
 
     if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut
-      console.log('📴 الاتصال انقطع، إعادة الاتصال:', shouldReconnect)
+      const reason = (lastDisconnect?.error)?.output?.statusCode
+      const shouldReconnect = reason !== DisconnectReason.loggedOut
+      console.log('📴 تم قطع الاتصال، جارٍ إعادة الاتصال:', shouldReconnect)
       if (shouldReconnect) startBot()
     } else if (connection === 'open') {
-      console.log('✅ تم الاتصال بواتساب')
+      console.log('✅ تم الاتصال بواتساب بنجاح!')
     }
   })
 
   sock.ev.on('creds.update', saveCreds)
 }
 
-startBot()
+startBot().catch(err => {
+  console.error('❌ حدث خطأ أثناء تشغيل البوت:', err)
+})
