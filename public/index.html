@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة تحكم رسائل واتساب</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 20px; direction: rtl; }
+    h1 { text-align: center; }
+    .message { background: white; margin-bottom: 10px; padding: 10px; border-radius: 5px; box-shadow: 0 0 5px #ccc; }
+    .sender { font-weight: bold; color: #1a73e8; }
+    .time { color: gray; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>📥 رسائل واتساب الواردة</h1>
+  <div id="messages"></div>
+
+  <script>
+    async function fetchMessages() {
+      const res = await fetch('/messages')
+      const data = await res.json()
+      const container = document.getElementById('messages')
+      container.innerHTML = ''
+      data.forEach(msg => {
+        container.innerHTML += `
+          <div class="message">
+            <div class="sender">👤 ${msg.sender}</div>
+            <div>${msg.text}</div>
+            <div class="time">${msg.time}</div>
+          </div>
+        `
+      })
+    }
+
+    setInterval(fetchMessages, 3000)
+    fetchMessages()
+  </script>
+</body>
+</html>
