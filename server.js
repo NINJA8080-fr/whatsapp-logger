@@ -1,25 +1,21 @@
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+dotenv.config();
+
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log("✅ متصل بقاعدة البيانات MongoDB بنجاح"))
+.catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
 import express from 'express'
-import fs from 'fs'
-
 const app = express()
-const PORT = 3000
-const logFile = './messages.json'
-let messages = []
+const port = process.env.PORT || 3000
 
-if (fs.existsSync(logFile)) {
-    try {
-        messages = JSON.parse(fs.readFileSync(logFile))
-    } catch (err) {
-        messages = []
-    }
-}
-
-app.use(express.static('public'))
-
-app.get('/messages', (req, res) => {
-    res.json(messages)
+app.get('/', (req, res) => {
+  res.send('✅ البوت شغال من سيرفر Railway!')
 })
 
-app.listen(PORT, () => {
-    console.log(`🟢 لوحة التحكم: http://localhost:${PORT}`)
+app.listen(port, () => {
+  console.log(`🚀 السيرفر يعمل على http://localhost:${port}`)
 })

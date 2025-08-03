@@ -1,3 +1,4 @@
+import { connectDB, Message } from './db.js'
 import {
   makeWASocket,
   DisconnectReason,
@@ -8,10 +9,13 @@ import P from 'pino'
 import fs from 'fs'
 import qrcode from 'qrcode-terminal'
 
+// ✅ الاتصال بقاعدة البيانات
+await connectDB()
+
 const logFile = './messages.json'
 let messages = []
 
-// ✅ تحميل سجل الرسائل من الملف
+// ✅ تحميل سجل الرسائل من الملف (اختياري فقط للتوافق)
 if (fs.existsSync(logFile)) {
   try {
     messages = JSON.parse(fs.readFileSync(logFile))
@@ -41,8 +45,14 @@ async function startBot() {
     const time = new Date().toLocaleString()
 
     const log = { sender, from, text, time }
+
+    // 🔴 حفظ في ملف (اختياري)
     messages.unshift(log)
     fs.writeFileSync(logFile, JSON.stringify(messages, null, 2))
+
+    // ✅ حفظ في MongoDB
+    await Message.create(log)
+
     console.log(`[${time}] ${sender}: ${text}`)
   })
 
